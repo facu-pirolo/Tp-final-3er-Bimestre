@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.SceneManagement;
 
 public class RayCats : MonoBehaviour
 {
@@ -16,6 +17,10 @@ public class RayCats : MonoBehaviour
     [SerializeField] Transform Jugador;
     [SerializeField] Animator anim;
     [SerializeField] float velocity;
+    float tiempoVision = 0f;
+    [SerializeField] float tiempoOlvido = 2f;
+
+
 
     // Start is called before the first frame update
     void Awake()
@@ -31,10 +36,21 @@ public class RayCats : MonoBehaviour
             puntoActual = (puntoActual + 1) % puntosDePatru.Length;
             agent.destination = puntosDePatru[puntoActual].position;
         }
-
-        if (!Patrulaje)
+        else
         {
-            agent.destination = Jugador.position;
+            if (!Patrulaje)
+            {
+                agent.destination = Jugador.position;
+            }
+
+            
+            tiempoVision += Time.deltaTime;
+            if (tiempoVision >= tiempoOlvido)
+            {
+                Patrulaje = true;
+                Jugador = null;
+                tiempoVision = 0f;
+            }
         }
         velocity = agent.velocity.magnitude;
         anim.SetFloat("Speed", velocity);
@@ -49,14 +65,22 @@ public class RayCats : MonoBehaviour
                 Jugador = hit.collider.transform;
                 Debug.Log("Detectó a: " + hit.collider.gameObject.name);
                 Patrulaje = false;
+                tiempoVision = 0f;
             }
+        }
+    }
+    public void OnTriggerEnter(Collider other)
+    {
+        if (other.CompareTag("Jugador"))
+        {
+            SceneManager.LoadScene("Mensaje");
         }
     }
 
 
+
     void OnDrawGizmos()
     {
-
         Color color = Color.red;
         Gizmos.color = color;
         Gizmos.DrawLine(sightOrigin.position, sightOrigin.position + sightOrigin.forward * rayDistance);
